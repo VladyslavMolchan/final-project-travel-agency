@@ -4,26 +4,39 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.persistence.Entity;
+import jakarta.persistence.*;
+
+import org.hibernate.annotations.GenericGenerator;
 
 @Entity
+@Table(name = "app_user")
 public class User {
 
-    private UUID id;
+	@Id
+	@GeneratedValue(generator = "UUID")
+	@GenericGenerator(
+			name = "UUID",
+			strategy = "org.hibernate.id.UUIDGenerator"
+	)
+	@Column(updatable = false, nullable = false)
+	private UUID id;
 
-    private String username;
+	private String username;
 
-    private String password;
+	private String password;
 
-    private Role role;
+	private Role role;
 
-    private List<Voucher> vouchers;
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	private List<Voucher> vouchers;
 
-    private String phoneNumber;
+	private String phoneNumber;
 
-    private BigDecimal balance;
+	private BigDecimal balance;
 
-    private boolean active;
+	private boolean active;
+
+	// Геттери і сеттери
 
 	public UUID getId() {
 		return id;
@@ -88,5 +101,4 @@ public class User {
 	public void setActive(boolean active) {
 		this.active = active;
 	}
-    
 }
