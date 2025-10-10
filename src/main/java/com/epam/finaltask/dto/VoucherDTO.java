@@ -18,8 +18,5 @@ public class VoucherDTO {
 	private LocalDate arrivalDate;
 	private LocalDate evictionDate;
 	private UUID userId;
-	private boolean isHot;
-	public void setIsHot(boolean hot) {
-		this.isHot = hot;
-	}
+	private boolean hot;
 }

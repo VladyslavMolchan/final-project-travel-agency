@@ -1,209 +1,134 @@
 package com.epam.finaltask.restcontroller;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureDataJpa;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.epam.finaltask.dto.VoucherDTO;
-import com.epam.finaltask.model.HotelType;
-import com.epam.finaltask.model.TourType;
-import com.epam.finaltask.model.TransferType;
-import com.epam.finaltask.model.VoucherStatus;
 import com.epam.finaltask.service.VoucherService;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.*;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import java.util.*;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest
-@AutoConfigureDataJpa
-@AutoConfigureMockMvc
-@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
-@TestPropertySource(properties = "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect")
-public class VoucherRestControllerTest {
+class VoucherRestControllerTest {
 
-    @MockBean
+    @Mock
     private VoucherService voucherService;
 
-    @Autowired
+    @InjectMocks
+    private VoucherRestController voucherRestController;
+
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private ObjectMapper objectMapper = new ObjectMapper();
 
-    @Test
-    @WithMockUser
-    void findAll_Successfully() throws Exception {
-        List<VoucherDTO> voucherDTOList = new ArrayList<>();
-        when(voucherService.findAll()).thenReturn(voucherDTOList);
-        MvcResult result = mockMvc.perform(get("/api/vouchers"))
-                .andExpect(status().isOk())
-                .andReturn();
-        String responseBody = result.getResponse().getContentAsString();
-
-        JsonNode rootNode = objectMapper.readTree(responseBody);
-        JsonNode resultsNode = rootNode.path("results");
-
-        List<VoucherDTO> responseVoucherDTOList = objectMapper.convertValue(resultsNode, new TypeReference<List<VoucherDTO>>() {});
-        assertEquals(voucherDTOList, responseVoucherDTOList);
-    }
-    
-    @Test
-    @WithMockUser
-    void findAllByUserId_Successfully() throws Exception {
-        String userId = String.valueOf(UUID.randomUUID());
-        List<VoucherDTO> voucherDTOList = new ArrayList<>();
-
-        when(voucherService.findAllByUserId(userId)).thenReturn(voucherDTOList);
-
-        MvcResult result = mockMvc.perform(get("/api/vouchers/user/" + userId))
-                .andExpect(status().isOk())
-                .andReturn();
-        String responseBody = result.getResponse().getContentAsString();
-
-        JsonNode rootNode = objectMapper.readTree(responseBody);
-        JsonNode resultsNode = rootNode.path("results");
-
-        List<VoucherDTO> responseVoucherDTOList = objectMapper.convertValue(resultsNode, new TypeReference<List<VoucherDTO>>() {});
-
-        assertEquals(voucherDTOList, responseVoucherDTOList);
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        mockMvc = MockMvcBuilders.standaloneSetup(voucherRestController).build();
     }
 
     @Test
-    @WithMockUser(authorities = "ROLE_ADMIN")
-    void createVoucher_ValidData_SuccessfullyCreated() throws Exception {
-        VoucherDTO voucherDTO = new VoucherDTO();
-        voucherDTO.setTitle("SummerSale2024");
-        voucherDTO.setDescription("Summer Sale Voucher Description");
-        voucherDTO.setPrice(299.99);
-        voucherDTO.setTourType(TourType.ADVENTURE.name());
-        voucherDTO.setTransferType(TransferType.PLANE.name());
-        voucherDTO.setHotelType(HotelType.FIVE_STARS.name());
-        voucherDTO.setStatus(VoucherStatus.PAID.name());
-        voucherDTO.setArrivalDate(LocalDate.of(2024, 6, 15));
-        voucherDTO.setEvictionDate(LocalDate.of(2024, 6, 20));
-        voucherDTO.setUserId(UUID.randomUUID());
-        voucherDTO.setIsHot(false);
+    void findAll_ShouldReturnListOfVouchers() throws Exception {
+        List<VoucherDTO> vouchers = List.of(new VoucherDTO(), new VoucherDTO());
+        when(voucherService.findAll()).thenReturn(vouchers);
 
-        String expectedStatusCode = "OK";
-        String expectedMessage = "Voucher is successfully created";
+        mockMvc.perform(get("/api/vouchers"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value("OK"))
+                .andExpect(jsonPath("$.results").isArray())
+                .andExpect(jsonPath("$.results.length()").value(vouchers.size()));
 
-        when(voucherService.create(any(VoucherDTO.class))).thenReturn(voucherDTO);
+        verify(voucherService).findAll();
+    }
+
+    @Test
+    void findAllByUserId_ShouldReturnVouchersForUser() throws Exception {
+        String userId = "user123";
+        List<VoucherDTO> vouchers = List.of(new VoucherDTO());
+        when(voucherService.findAllByUserId(userId)).thenReturn(vouchers);
+
+        mockMvc.perform(get("/api/vouchers/user/{userId}", userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value("OK"))
+                .andExpect(jsonPath("$.results").isArray())
+                .andExpect(jsonPath("$.results.length()").value(vouchers.size()));
+
+        verify(voucherService).findAllByUserId(userId);
+    }
+
+    @Test
+    void createVoucher_ShouldReturnCreatedVoucher() throws Exception {
+        VoucherDTO voucher = new VoucherDTO();
+        voucher.setId("voucher1");
+
+        when(voucherService.create(any(VoucherDTO.class))).thenReturn(voucher);
 
         mockMvc.perform(post("/api/vouchers")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsBytes(voucherDTO)))
-                .andDo(print())
+                        .content(objectMapper.writeValueAsString(voucher)))
                 .andExpect(status().isCreated())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.statusCode").value(expectedStatusCode))
-                .andExpect(jsonPath("$.statusMessage").value(expectedMessage));
+                .andExpect(jsonPath("$.statusCode").value("OK"))
+                .andExpect(jsonPath("$.results.id").value("voucher1"));
+
+        verify(voucherService).create(any(VoucherDTO.class));
     }
 
     @Test
-    @WithMockUser(authorities = "ROLE_ADMIN")
-    void updateVoucher_ValidData_SuccessfullyUpdated() throws Exception {
-        VoucherDTO voucherDTO = new VoucherDTO();
-        voucherDTO.setTitle("UpdatedTitle");
-        voucherDTO.setDescription("Updated description");
-        voucherDTO.setPrice(499.99);
-        voucherDTO.setTourType(TourType.SAFARI.name());
-        voucherDTO.setTransferType(TransferType.JEEPS.name());
-        voucherDTO.setHotelType(HotelType.THREE_STARS.name());
-        voucherDTO.setStatus(VoucherStatus.PAID.name());
-        voucherDTO.setArrivalDate(LocalDate.of(2024, 7, 15));
-        voucherDTO.setEvictionDate(LocalDate.of(2024, 7, 20));
-        voucherDTO.setUserId(UUID.randomUUID());
-        voucherDTO.setIsHot(true);
+    void updateVoucher_ShouldReturnUpdatedVoucher() throws Exception {
+        String id = "voucher1";
+        VoucherDTO voucher = new VoucherDTO();
+        voucher.setId(id);
 
-        String voucherId = String.valueOf(UUID.randomUUID());
-        String expectedStatusCode = "OK";
-        String expectedMessage = "Voucher is successfully updated";
+        when(voucherService.update(eq(id), any(VoucherDTO.class))).thenReturn(voucher);
 
-        when(voucherService.update(eq(voucherId), any(VoucherDTO.class))).thenReturn(voucherDTO);
-
-        mockMvc.perform(patch("/api/vouchers/" + voucherId)
+        mockMvc.perform(patch("/api/vouchers/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsBytes(voucherDTO)))
-                .andDo(print())
+                        .content(objectMapper.writeValueAsString(voucher)))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.statusCode").value(expectedStatusCode))
-                .andExpect(jsonPath("$.statusMessage").value(expectedMessage));
+                .andExpect(jsonPath("$.statusCode").value("OK"))
+                .andExpect(jsonPath("$.results.id").value(id));
+
+        verify(voucherService).update(eq(id), any(VoucherDTO.class));
     }
 
     @Test
-    @WithMockUser(authorities = "ROLE_ADMIN")
-    void deleteVoucherById_VoucherExists_SuccessfullyDeleted() throws Exception {
-        String voucherId = String.valueOf(UUID.randomUUID());
-        String expectedStatusCode = "OK";
-        String expectedMessage = String.format("Voucher with Id %s has been deleted", voucherId);
+    void deleteVoucher_ShouldReturnOk() throws Exception {
+        String id = "voucher1";
 
-        doNothing().when(voucherService).delete(voucherId);
+        doNothing().when(voucherService).delete(id);
 
-        mockMvc.perform(delete("/api/vouchers/" + voucherId))
+        mockMvc.perform(delete("/api/vouchers/{id}", id))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.statusCode").value(expectedStatusCode))
-                .andExpect(jsonPath("$.statusMessage").value(expectedMessage));
+                .andExpect(jsonPath("$.statusCode").value("OK"))
+                .andExpect(jsonPath("$.statusMessage").value("Voucher with Id " + id + " has been deleted"))
+                .andExpect(jsonPath("$.results").doesNotExist());
 
-        verify(voucherService, times(1)).delete(voucherId);
+        verify(voucherService).delete(id);
     }
 
     @Test
-    @WithMockUser(authorities = {"ROLE_ADMIN", "ROLE_MANAGER"})
-    void changeVoucherStatus_ValidData_SuccessfullyChanged() throws Exception {
-        VoucherDTO voucherDTO = new VoucherDTO();
-        voucherDTO.setIsHot(true);
+    void changeVoucherStatus_ShouldReturnUpdatedVoucher() throws Exception {
+        String id = "voucher1";
+        VoucherDTO voucher = new VoucherDTO();
+        voucher.setId(id);
 
-        String voucherId = String.valueOf(UUID.randomUUID());
-        String expectedStatusCode = "OK";
-        String expectedMessage = "Voucher status is successfully changed";
+        when(voucherService.changeHotStatus(eq(id), any(VoucherDTO.class))).thenReturn(voucher);
 
-        when(voucherService.changeHotStatus(eq(voucherId), any(VoucherDTO.class))).thenReturn(voucherDTO);
-
-        mockMvc.perform(patch("/api/vouchers/" + voucherId + "/status")
+        mockMvc.perform(patch("/api/vouchers/{id}/status", id)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsBytes(voucherDTO)))
-                .andDo(print())
+                        .content(objectMapper.writeValueAsString(voucher)))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.statusCode").value(expectedStatusCode))
-                .andExpect(jsonPath("$.statusMessage").value(expectedMessage));
+                .andExpect(jsonPath("$.statusCode").value("OK"))
+                .andExpect(jsonPath("$.results.id").value(id));
 
-        verify(voucherService, times(1)).changeHotStatus(eq(voucherId), any(VoucherDTO.class));
+        verify(voucherService).changeHotStatus(eq(id), any(VoucherDTO.class));
     }
 }

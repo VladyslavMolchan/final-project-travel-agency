@@ -1,124 +1,163 @@
 package com.epam.finaltask.service;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import java.util.Optional;
 import java.util.UUID;
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.epam.finaltask.dto.UserDTO;
 import com.epam.finaltask.mapper.UserMapper;
 import com.epam.finaltask.model.User;
 import com.epam.finaltask.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 public class UserServiceImplTest {
 
-  @Mock
-  private UserRepository userRepository;
+    @Mock
+    private UserRepository userRepository;
 
-  @Mock
-  private PasswordEncoder passwordEncoder;
+    @Mock
+    private UserMapper userMapper;
 
-  @Mock
-  private UserMapper userMapper;
+    @InjectMocks
+    private UserServiceImpl userService;
 
-  @InjectMocks
-  private UserServiceImpl userService;
+    @BeforeEach
+    void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
 
-  @Test
-  void getUserByUsername_UserExists_Success() {
-    // Given
-    String username = "existingUser";
-    User user = new User();
-    user.setUsername(username);
+    @Test
+    void register_ThrowsUnsupportedOperationException() {
+        UserDTO userDTO = new UserDTO();
+        UnsupportedOperationException exception = assertThrows(UnsupportedOperationException.class, () -> {
+            userService.register(userDTO);
+        });
+        assertEquals("Not implemented", exception.getMessage());
+    }
 
-    UserDTO expectedUserDTO = new UserDTO();
-    expectedUserDTO.setUsername(username);
+    @Test
+    void updateUser_ThrowsUnsupportedOperationException() {
+        UserDTO userDTO = new UserDTO();
+        UnsupportedOperationException exception = assertThrows(UnsupportedOperationException.class, () -> {
+            userService.updateUser("username", userDTO);
+        });
+        assertEquals("Not implemented", exception.getMessage());
+    }
 
-    when(userRepository.findUserByUsername(username)).thenReturn(Optional.of(user));
-    when(userMapper.toUserDTO(any(User.class))).thenReturn(expectedUserDTO);
+    @Test
+    void getUserByUsername_UserExists_ReturnsUserDTO() {
+        String username = "testUser";
+        User user = new User();
+        UserDTO userDTO = new UserDTO();
 
-    // When
-    UserDTO result = userService.getUserByUsername(username);
+        when(userRepository.findUserByUsername(username)).thenReturn(Optional.of(user));
+        when(userMapper.toUserDTO(user)).thenReturn(userDTO);
 
-    // Then
-    assertNotNull(result, "The returned UserDTO should not be null");
-    assertEquals(expectedUserDTO.getUsername(), result.getUsername(),
-        "The username should match the expected value");
+        UserDTO result = userService.getUserByUsername(username);
 
-    verify(userRepository, times(1)).findUserByUsername(username);
-    verify(userMapper, times(1)).toUserDTO(any(User.class));
-  }
+        assertNotNull(result);
+        assertEquals(userDTO, result);
+        verify(userRepository).findUserByUsername(username);
+        verify(userMapper).toUserDTO(user);
+    }
 
-  @Test
-  void changeAccountStatus_UserExist_Success() {
-    // Given
-    String userId = UUID.randomUUID().toString();
-    UserDTO userDTO = new UserDTO();
-    userDTO.setId(userId);
-    userDTO.setActive(true);
+    @Test
+    void getUserByUsername_UserNotFound_ThrowsRuntimeException() {
+        String username = "missingUser";
+        when(userRepository.findUserByUsername(username)).thenReturn(Optional.empty());
 
-    User user = new User();
-    user.setId(UUID.fromString(userId));
-    user.setActive(false);
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            userService.getUserByUsername(username);
+        });
 
-    User updatedUser = new User();
-    updatedUser.setId(UUID.fromString(userId));
-    updatedUser.setActive(true);
+        assertTrue(exception.getMessage().contains("User not found with username"));
+        verify(userRepository).findUserByUsername(username);
+    }
 
-    when(userRepository.findById(UUID.fromString(userId))).thenReturn(Optional.of(user));
-    when(userMapper.toUser(any(UserDTO.class))).thenReturn(updatedUser);
-    when(userRepository.save(any(User.class))).thenReturn(updatedUser);
-    when(userMapper.toUserDTO(any(User.class))).thenReturn(userDTO);
+    @Test
+    void changeAccountStatus_UserExists_ChangesStatusAndReturnsUserDTO() {
+        UUID userId = UUID.randomUUID();
+        UserDTO userDTO = new UserDTO();
+        userDTO.setId(userId.toString());
+        userDTO.setActive(true);
 
-    // When
-    UserDTO resultDTO = userService.changeAccountStatus(userDTO);
+        User userFromDto = new User();
+        userFromDto.setActive(true);
 
-    // Then
-    assertNotNull(resultDTO, "The returned UserDTO should not be null");
-    assertTrue(resultDTO.isActive(), "The account status should be updated to true");
+        User userFromRepo = new User();
+        userFromRepo.setActive(false);
 
-    verify(userRepository, times(1)).findById(UUID.fromString(userId));
-    verify(userRepository, times(1)).save(any(User.class));
-  }
+        User savedUser = new User();
+        savedUser.setActive(true);
 
+        UserDTO savedUserDTO = new UserDTO();
+        savedUserDTO.setActive(true);
 
-  @Test
-  void getUserById_UserExist_Success() {
-    // Given
-    UUID id = UUID.randomUUID();
-    User user = new User();
-    user.setId(id);
+        when(userMapper.toUser(userDTO)).thenReturn(userFromDto);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(userFromRepo));
+        when(userRepository.save(userFromRepo)).thenReturn(savedUser);
+        when(userMapper.toUserDTO(savedUser)).thenReturn(savedUserDTO);
 
-    UserDTO expectedUserDTO = new UserDTO();
-    expectedUserDTO.setId(id.toString());
+        UserDTO result = userService.changeAccountStatus(userDTO);
 
-    when(userRepository.findById(id)).thenReturn(Optional.of(user));
-    when(userMapper.toUserDTO(any(User.class))).thenReturn(expectedUserDTO);
+        assertNotNull(result);
+        assertTrue(result.isActive());
+        assertEquals(savedUserDTO, result);
 
-    // When
-    UserDTO resultDTO = userService.getUserById(id);
+        verify(userMapper).toUser(userDTO);
+        verify(userRepository).findById(userId);
+        verify(userRepository).save(userFromRepo);
+        verify(userMapper).toUserDTO(savedUser);
+    }
 
-    // Then
-    assertNotNull(resultDTO, "The returned UserDTO should not be null");
-    assertEquals(expectedUserDTO.getId(), resultDTO.getId(),
-        "The user ID should match the expected value");
+    @Test
+    void changeAccountStatus_UserNotFound_ThrowsRuntimeException() {
+        UUID userId = UUID.randomUUID();
+        UserDTO userDTO = new UserDTO();
+        userDTO.setId(userId.toString());
 
-    verify(userRepository, times(1)).findById(id);
-    verify(userMapper, times(1)).toUserDTO(any(User.class));
-  }
+        when(userMapper.toUser(userDTO)).thenReturn(new User());
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            userService.changeAccountStatus(userDTO);
+        });
+
+        assertTrue(exception.getMessage().contains("User not found with ID"));
+        verify(userRepository).findById(userId);
+    }
+
+    @Test
+    void getUserById_UserExists_ReturnsUserDTO() {
+        UUID userId = UUID.randomUUID();
+        User user = new User();
+        UserDTO userDTO = new UserDTO();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userMapper.toUserDTO(user)).thenReturn(userDTO);
+
+        UserDTO result = userService.getUserById(userId);
+
+        assertNotNull(result);
+        assertEquals(userDTO, result);
+
+        verify(userRepository).findById(userId);
+        verify(userMapper).toUserDTO(user);
+    }
+
+    @Test
+    void getUserById_UserNotFound_ThrowsRuntimeException() {
+        UUID userId = UUID.randomUUID();
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            userService.getUserById(userId);
+        });
+
+        assertTrue(exception.getMessage().contains("User not found with ID"));
+        verify(userRepository).findById(userId);
+    }
 }
