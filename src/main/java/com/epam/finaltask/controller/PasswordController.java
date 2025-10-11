@@ -64,7 +64,7 @@ public class PasswordController {
         String token = UUID.randomUUID().toString();
         passwordResetService.createPasswordResetToken(request.getEmail(), token);
 
-        String resetLink = "http://localhost:8080/auth/reset-password?token=" + token;
+        String resetLink = "https://localhost:8443/auth/reset-password?token=" + token;
         emailService.sendPasswordResetEmail(request.getEmail(), resetLink);
 
         log.info("Password reset token generated and email sent to '{}'", request.getEmail());

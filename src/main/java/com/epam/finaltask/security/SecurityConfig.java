@@ -42,7 +42,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
-
+                .requiresChannel(channel -> channel.anyRequest().requiresSecure())
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
 
 

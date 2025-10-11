@@ -67,7 +67,7 @@ public class LoginController {
         String token = jwtUtil.generateToken(username);
         Cookie jwtCookie = new Cookie("jwt", token);
         jwtCookie.setHttpOnly(true);
-        jwtCookie.setSecure(false);
+        jwtCookie.setSecure(true);
         jwtCookie.setPath("/");
         jwtCookie.setMaxAge(3600);
 
