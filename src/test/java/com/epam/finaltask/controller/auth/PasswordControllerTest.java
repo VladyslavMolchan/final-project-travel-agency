@@ -83,6 +83,11 @@ class PasswordControllerTest {
         ForgotPasswordRequestDto dto = new ForgotPasswordRequestDto();
         dto.setEmail("user@example.com");
 
+
+        User user = new User();
+        user.setEmail("user@example.com");
+        when(authService.findByEmail("user@example.com")).thenReturn(Optional.of(user));
+
         BindingResult bindingResult = mock(BindingResult.class);
         when(bindingResult.hasErrors()).thenReturn(false);
         when(messageSource.getMessage(eq("reset.link.sent"), any(), any(Locale.class))).thenReturn("Reset link sent");

@@ -103,4 +103,9 @@ public class AuthService {
         log.debug("Generating token for user: {}", username);
         return jwtUtil.generateToken(username);
     }
+
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findUserByEmail(email);
+    }
+
 }
