@@ -92,7 +92,7 @@ class PasswordControllerTest {
         String view = passwordController.handleForgotPassword(dto, bindingResult, redirectAttributes);
 
         verify(passwordResetService).createPasswordResetToken(eq(dto.getEmail()), anyString());
-        verify(emailService).sendPasswordResetEmail(eq(dto.getEmail()), contains("http://localhost:8080/auth/reset-password?token="));
+        verify(emailService).sendPasswordResetEmail(eq(dto.getEmail()), contains("https://localhost:8443/auth/reset-password?token="));
         verify(redirectAttributes).addFlashAttribute(eq("message"), eq("Reset link sent"));
         assertEquals("redirect:/auth/forgot-password", view);
     }
