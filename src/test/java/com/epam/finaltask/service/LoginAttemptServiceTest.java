@@ -17,7 +17,7 @@ class LoginAttemptServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Фіксуємо початковий час — робимо тести детермінованими
+
         baseInstant = Instant.parse("2025-01-01T00:00:00Z");
         baseClock = Clock.fixed(baseInstant, ZoneOffset.UTC);
 

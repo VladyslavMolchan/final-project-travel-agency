@@ -1,5 +1,6 @@
 package com.epam.finaltask.service;
 
+import com.epam.finaltask.exception.UserNotFoundException;
 import com.epam.finaltask.model.RefreshToken;
 import com.epam.finaltask.model.User;
 import com.epam.finaltask.repository.RefreshTokenRepository;
@@ -24,7 +25,7 @@ public class RefreshTokenService {
 
     public RefreshToken createRefreshToken(String username) {
         User user = userRepository.findUserByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         refreshTokenRepository.deleteByUser(user);
 

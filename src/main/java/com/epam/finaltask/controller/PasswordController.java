@@ -64,7 +64,7 @@ public class PasswordController {
         Optional<User> userOpt = authService.findByEmail(request.getEmail());
         if (userOpt.isEmpty()) {
             log.warn("Password reset requested for non-existent email: {}", request.getEmail());
-            redirectAttributes.addFlashAttribute("error", getMessage("reset.email.notfound")); // це повідомлення має бути в messages.properties
+            redirectAttributes.addFlashAttribute("error", getMessage("reset.email.notfound"));
             redirectAttributes.addFlashAttribute("forgotPasswordRequest", request);
             return "redirect:/auth/forgot-password";
         }

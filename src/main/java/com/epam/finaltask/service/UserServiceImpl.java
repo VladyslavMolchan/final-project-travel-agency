@@ -3,6 +3,7 @@ package com.epam.finaltask.service;
 
 import java.util.UUID;
 import com.epam.finaltask.dto.UserDTO;
+import com.epam.finaltask.exception.UserNotFoundException;
 import com.epam.finaltask.mapper.UserMapper;
 import com.epam.finaltask.model.User;
 import com.epam.finaltask.repository.UserRepository;
@@ -42,7 +43,7 @@ public class UserServiceImpl implements UserService {
 		User user = userRepository.findUserByUsername(username)
 				.orElseThrow(() -> {
 					log.error("User not found with username: {}", username);
-					return new RuntimeException("User not found with username: " + username);
+					return new UserNotFoundException("User not found with username: " + username);
 				});
 		return userMapper.toUserDTO(user);
 	}
@@ -57,7 +58,7 @@ public class UserServiceImpl implements UserService {
 		User user = userRepository.findById(id)
 				.orElseThrow(() -> {
 					log.error("User not found with ID: {}", id);
-					return new RuntimeException("User not found with ID: " + id);
+					return new UserNotFoundException("User not found with ID: " + id);
 				});
 
 		user.setActive(userFromDto.isActive());
@@ -73,7 +74,7 @@ public class UserServiceImpl implements UserService {
 		User user = userRepository.findById(id)
 				.orElseThrow(() -> {
 					log.error("User not found with ID: {}", id);
-					return new RuntimeException("User not found with ID: " + id);
+					return new UserNotFoundException("User not found with ID: " + id);
 				});
 		return userMapper.toUserDTO(user);
 	}
