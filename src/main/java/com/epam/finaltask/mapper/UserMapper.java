@@ -23,7 +23,6 @@ public interface UserMapper {
     @Mapping(target = "balance", source = "balance", qualifiedByName = "doubleToBigDecimal")
     User toUser(UserDTO userDTO);
 
-    // Конвертери
 
     @Named("uuidToString")
     default String uuidToString(UUID id) {

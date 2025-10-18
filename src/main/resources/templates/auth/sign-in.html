@@ -15,7 +15,7 @@
 
     <form th:action="@{/auth/login}" th:object="${loginRequest}" method="post" novalidate>
 
-        <!-- Username -->
+
         <div class="mb-3">
             <label for="username" class="form-label" th:text="#{login.username}">Username</label>
             <input type="text" id="username" class="form-control" th:field="*{username}"
@@ -25,7 +25,7 @@
             <div class="text-danger" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
         </div>
 
-        <!-- Password -->
+
         <div class="mb-3">
             <label for="password" class="form-label" th:text="#{login.password}">Password</label>
             <input type="password" id="password" class="form-control" th:field="*{password}"
@@ -36,6 +36,13 @@
 
         <button type="submit" class="btn btn-primary w-100" th:text="#{login.submit}">Login</button>
     </form>
+
+    <div class="mt-3 text-center">
+        <a class="btn btn-outline-danger w-100" th:href="@{/oauth2/authorization/google}">
+            <i class="bi bi-google"></i> Sign in with Google
+        </a>
+    </div>
+
 
     <div class="mt-3 text-center">
         <a th:href="@{/auth/forgot-password}" class="btn btn-link" th:text="#{login.forgotPassword}">Forgot password?</a>

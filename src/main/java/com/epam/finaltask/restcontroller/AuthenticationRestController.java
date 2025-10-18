@@ -7,7 +7,6 @@ import com.epam.finaltask.exception.*;
 import com.epam.finaltask.model.RefreshToken;
 import com.epam.finaltask.model.Role;
 import com.epam.finaltask.model.User;
-import com.epam.finaltask.security.JwtUtil;
 import com.epam.finaltask.service.AuthService;
 import com.epam.finaltask.service.PasswordResetService;
 import com.epam.finaltask.service.RefreshTokenService;
@@ -27,9 +26,8 @@ import java.util.Optional;
 public class AuthenticationRestController {
 
     private final AuthService authService;
-    private final JwtUtil jwtUtil;
-    private final RefreshTokenService refreshTokenService;
     private final PasswordResetService passwordResetService;
+    private final RefreshTokenService refreshTokenService;
 
     // --- Registration ---
     @PostMapping("/register")
@@ -47,10 +45,17 @@ public class AuthenticationRestController {
 
         boolean success = authService.register(registrationDto, role);
         if (!success) {
-            throw new UserAlreadyExistsException();
+            throw new UserAlreadyExistsException("Email або Username вже існує!");
         }
 
-        return ResponseEntity.ok(Map.of("message", "Registration successful"));
+
+        Map<String, String> tokens = authService.generateTokens(registrationDto.getUsername());
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Registration successful",
+                "accessToken", tokens.get("accessToken"),
+                "refreshToken", tokens.get("refreshToken")
+        ));
     }
 
     // --- Login ---
@@ -61,16 +66,15 @@ public class AuthenticationRestController {
             throw new InvalidCredentialsException();
         }
 
-        String accessToken = jwtUtil.generateToken(loginRequest.getUsername());
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(loginRequest.getUsername());
+        Map<String, String> tokens = authService.generateTokens(loginRequest.getUsername());
 
-        Cookie accessCookie = new Cookie("jwt", accessToken);
+        Cookie accessCookie = new Cookie("jwt", tokens.get("accessToken"));
         accessCookie.setHttpOnly(true);
         accessCookie.setPath("/");
-        accessCookie.setMaxAge((int) (jwtUtil.getExpirationMs() / 1000));
+        accessCookie.setMaxAge(3600);
         response.addCookie(accessCookie);
 
-        Cookie refreshCookie = new Cookie("refreshToken", refreshToken.getToken());
+        Cookie refreshCookie = new Cookie("refreshToken", tokens.get("refreshToken"));
         refreshCookie.setHttpOnly(true);
         refreshCookie.setPath("/");
         refreshCookie.setMaxAge(86400 * 7);
@@ -78,8 +82,8 @@ public class AuthenticationRestController {
 
         return ResponseEntity.ok(Map.of(
                 "message", "Login successful",
-                "accessToken", accessToken,
-                "refreshToken", refreshToken.getToken()
+                "accessToken", tokens.get("accessToken"),
+                "refreshToken", tokens.get("refreshToken")
         ));
     }
 
@@ -111,20 +115,25 @@ public class AuthenticationRestController {
                 .map(refreshTokenService::verifyExpiration)
                 .map(RefreshToken::getUser)
                 .map(user -> {
-                    String newAccessToken = jwtUtil.generateToken(user.getUsername());
+                    Map<String, String> tokens = authService.generateTokens(user.getUsername());
 
-                    Cookie accessCookie = new Cookie("jwt", newAccessToken);
+                    Cookie accessCookie = new Cookie("jwt", tokens.get("accessToken"));
                     accessCookie.setHttpOnly(true);
                     accessCookie.setPath("/");
-                    accessCookie.setMaxAge((int) (jwtUtil.getExpirationMs() / 1000));
+                    accessCookie.setMaxAge(3600);
                     response.addCookie(accessCookie);
 
+                    Cookie refreshCookie = new Cookie("refreshToken", tokens.get("refreshToken"));
+                    refreshCookie.setHttpOnly(true);
+                    refreshCookie.setPath("/");
+                    refreshCookie.setMaxAge(86400 * 7);
+                    response.addCookie(refreshCookie);
+
                     return ResponseEntity.ok(Map.of(
-                            "accessToken", newAccessToken,
-                            "refreshToken", refreshTokenStr
+                            "accessToken", tokens.get("accessToken"),
+                            "refreshToken", tokens.get("refreshToken")
                     ));
                 })
                 .orElseThrow(InvalidRefreshTokenException::new);
     }
-
 }

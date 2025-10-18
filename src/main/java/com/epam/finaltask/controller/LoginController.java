@@ -2,7 +2,6 @@ package com.epam.finaltask.controller;
 
 
 import com.epam.finaltask.dto.LoginRequestDto;
-import com.epam.finaltask.security.JwtUtil;
 import com.epam.finaltask.service.AuthService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -15,6 +14,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import java.util.Map;
 
 
 @Controller
@@ -24,12 +24,10 @@ public class LoginController {
 
     private final AuthService authService;
     private final MessageSource messageSource;
-    private final JwtUtil jwtUtil;
 
-    public LoginController(AuthService authService, MessageSource messageSource, JwtUtil jwtUtil) {
+    public LoginController(AuthService authService, MessageSource messageSource) {
         this.authService = authService;
         this.messageSource = messageSource;
-        this.jwtUtil = jwtUtil;
     }
 
     @GetMapping("/sign-in")
@@ -46,36 +44,36 @@ public class LoginController {
                         RedirectAttributes redirectAttributes,
                         HttpServletResponse response) {
 
-        String username = loginRequest.getUsername();
-
         if (result.hasErrors()) {
-            log.warn("Login validation failed for user '{}': {}", username, result.getAllErrors());
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.loginRequest", result);
             redirectAttributes.addFlashAttribute("loginRequest", loginRequest);
             return "redirect:/auth/sign-in";
         }
 
         boolean success = authService.login(loginRequest);
-
         if (!success) {
-            log.warn("Login failed for user '{}'", username);
             redirectAttributes.addFlashAttribute("loginError", getMessage("login.error"));
             return "redirect:/auth/sign-in";
         }
 
 
-        String token = jwtUtil.generateToken(username);
-        Cookie jwtCookie = new Cookie("jwt", token);
-        jwtCookie.setHttpOnly(true);
-        jwtCookie.setSecure(true);
-        jwtCookie.setPath("/");
-        jwtCookie.setMaxAge(3600);
+        Map<String, String> tokens = authService.generateTokens(loginRequest.getUsername());
 
-        jwtCookie.setAttribute("SameSite", "Lax");
+        Cookie accessCookie = new Cookie("jwt", tokens.get("accessToken"));
+        accessCookie.setHttpOnly(true);
+        accessCookie.setPath("/");
+        accessCookie.setMaxAge(3600);
+        accessCookie.setAttribute("SameSite", "Lax");
 
-        response.addCookie(jwtCookie);
+        Cookie refreshCookie = new Cookie("refreshToken", tokens.get("refreshToken"));
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setPath("/");
+        refreshCookie.setMaxAge(86400 * 7);
+        refreshCookie.setAttribute("SameSite", "Lax");
 
-        log.info("User '{}' logged in successfully", username);
+        response.addCookie(accessCookie);
+        response.addCookie(refreshCookie);
+
         redirectAttributes.addFlashAttribute("loginSuccess", getMessage("login.success"));
         return "redirect:/";
     }

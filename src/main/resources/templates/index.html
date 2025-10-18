@@ -10,7 +10,7 @@
 </head>
 <body>
 
-<!-- Flash message after registration -->
+
 <div th:if="${registerSuccess}" class="alert alert-success text-center" th:text="${registerSuccess}"></div>
 
 <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
@@ -24,7 +24,7 @@
         </button>
 
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <!-- Left Navigation -->
+
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
                     <a class="nav-link active" aria-current="page" th:href="@{/}" th:text="#{nav.home}">Home</a>
@@ -37,9 +37,9 @@
                 </li>
             </ul>
 
-            <!-- Right Controls: Auth + Language -->
+
             <div class="d-flex align-items-center">
-                <!-- If user is logged in -->
+
                 <div th:if="${username}" class="me-3 d-flex align-items-center">
                     <span class="me-2 fw-semibold text-primary">
                         👤 <span th:text="${username}">User</span>
@@ -49,7 +49,7 @@
                     </form>
                 </div>
 
-                <!-- If user is NOT logged in -->
+
                 <div th:unless="${username}">
                     <a th:href="@{/auth/sign-in}" class="btn btn-outline-success btn-sm me-2" th:text="#{nav.login}">Sign in</a>
                     <a th:href="@{/auth/register}" class="btn btn-outline-secondary btn-sm me-2" th:text="#{nav.register}">Sign up</a>

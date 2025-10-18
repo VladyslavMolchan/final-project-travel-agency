@@ -1,8 +1,9 @@
 package com.epam.finaltask.service;
 
+
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-
+import org.springframework.context.MessageSource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 
@@ -14,14 +15,18 @@ class EmailServiceTest {
     @Test
     void sendPasswordResetEmail_success() {
         JavaMailSender mailSender = mock(JavaMailSender.class);
-        EmailService emailService = new EmailService(mailSender);
+        MessageSource messageSource = mock(MessageSource.class);
+
+        EmailService emailService = new EmailService(mailSender, messageSource);
 
         String toEmail = "test@example.com";
         String resetLink = "http://reset-link";
 
+        when(messageSource.getMessage(eq("reset.email.subject"), any(), any())).thenReturn("Password Reset Request");
+        when(messageSource.getMessage(eq("reset.email.body"), eq(new Object[]{resetLink}), any()))
+                .thenReturn("Click here to reset: " + resetLink);
 
         emailService.sendPasswordResetEmail(toEmail, resetLink);
-
 
         ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
         verify(mailSender, times(1)).send(messageCaptor.capture());
@@ -36,13 +41,19 @@ class EmailServiceTest {
     @Test
     void sendPasswordResetEmail_failure() {
         JavaMailSender mailSender = mock(JavaMailSender.class);
-        EmailService emailService = new EmailService(mailSender);
+        MessageSource messageSource = mock(MessageSource.class);
+
+        EmailService emailService = new EmailService(mailSender, messageSource);
 
         String toEmail = "test@example.com";
         String resetLink = "http://reset-link";
 
+        when(messageSource.getMessage(eq("reset.email.subject"), any(), any())).thenReturn("Password Reset Request");
+        when(messageSource.getMessage(eq("reset.email.body"), eq(new Object[]{resetLink}), any()))
+                .thenReturn("Click here to reset: " + resetLink);
 
-        doThrow(new RuntimeException("SMTP server error")).when(mailSender).send(any(SimpleMailMessage.class));
+        doThrow(new RuntimeException("SMTP server error"))
+                .when(mailSender).send(any(SimpleMailMessage.class));
 
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
                 emailService.sendPasswordResetEmail(toEmail, resetLink)

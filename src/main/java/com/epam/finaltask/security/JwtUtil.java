@@ -1,28 +1,38 @@
 package com.epam.finaltask.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
+import java.security.Key;
 import java.util.Date;
 import java.util.function.Function;
-import io.jsonwebtoken.security.Keys;
-import java.security.Key;
 
 @Component
 public class JwtUtil {
 
-    private static final String SECRET_KEY = "hokbQeTILXB7Z4KHBhooIxbkOzBzrVn9";
-    private static final long EXPIRATION_MS = 3600000; // 1 година
+    public static final String SECRET_KEY = "hokbQeTILXB7Z4KHBhooIxbkOzBzrVn9";
+    private static final long ACCESS_TOKEN_EXP_MS = 3600000; // 1 година
+    private static final long REFRESH_TOKEN_EXP_MS = 7 * 24 * 60 * 60 * 1000; // 7 днів
 
     private final Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
 
-    public String generateToken(String username) {
+    // --- Access Token ---
+    public String generateAccessToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))
+                .setExpiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXP_MS))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    // --- Refresh Token ---
+    public String generateRefreshToken(String username) {
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXP_MS))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -41,8 +51,7 @@ public class JwtUtil {
     }
 
     public boolean validateToken(String token, String username) {
-        final String extractedUsername = extractUsername(token);
-        return (extractedUsername != null && extractedUsername.equals(username) && !isTokenExpired(token));
+        return extractUsername(token).equals(username) && !isTokenExpired(token);
     }
 
     private boolean isTokenExpired(String token) {
@@ -53,7 +62,11 @@ public class JwtUtil {
         return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
     }
 
-    public long getExpirationMs() {
-        return EXPIRATION_MS;
+    public long getAccessTokenExpirationMs() {
+        return ACCESS_TOKEN_EXP_MS;
+    }
+
+    public long getRefreshTokenExpirationMs() {
+        return REFRESH_TOKEN_EXP_MS;
     }
 }
