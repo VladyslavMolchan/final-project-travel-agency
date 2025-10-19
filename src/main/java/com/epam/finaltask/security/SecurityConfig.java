@@ -45,7 +45,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/auth/**", "/api/auth/**", "/", "/index", "/h2-console/**",
                                 "/css/**", "/js/**", "/images/**", "/*.jpg", "/*.png",
-                                "/error/**" // додано для доступу до сторінок помилок
+                                "/error/**"
                         ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
@@ -62,8 +62,8 @@ public class SecurityConfig {
                         .successHandler(oAuth2SuccessHandler)
                 )
                 .exceptionHandling(ex -> ex
-                        .accessDeniedHandler(accessDeniedHandler())     // додано
-                        .authenticationEntryPoint(authenticationEntryPoint()) // додано
+                        .accessDeniedHandler(accessDeniedHandler())
+                        .authenticationEntryPoint(authenticationEntryPoint())
                 );
 
         return http.build();

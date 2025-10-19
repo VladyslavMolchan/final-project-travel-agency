@@ -1,13 +1,14 @@
 package com.epam.finaltask.service;
 
 import com.epam.finaltask.dto.OrderDTO;
-import com.epam.finaltask.mapper.OrderMapper;
 import com.epam.finaltask.model.Order;
 import com.epam.finaltask.model.Voucher;
 import com.epam.finaltask.repository.OrderRepository;
 import com.epam.finaltask.repository.VoucherRepository;
 import com.epam.finaltask.security.CustomUserDetails;
+import com.epam.finaltask.mapper.OrderMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -15,9 +16,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import lombok.extern.slf4j.Slf4j;
-
 
 @Slf4j
 @Service
@@ -95,5 +93,11 @@ public class OrderServiceImpl implements OrderService {
         log.debug("Fetching current user orders for {}", email);
 
         return getOrdersByEmail(email);
+    }
+
+    @Override
+    public Optional<Order> getOrderEntityById(String orderId) {
+        log.debug("Fetching order entity by id {}", orderId);
+        return orderRepository.findById(UUID.fromString(orderId));
     }
 }

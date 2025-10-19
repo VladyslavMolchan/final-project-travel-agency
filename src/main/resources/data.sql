@@ -2,7 +2,7 @@ INSERT INTO app_user (id, username, password, email, role, phone_number, balance
 VALUES (
     '11111111-1111-1111-1111-111111111111',
     'user123',
-    '$2a$12$QGqv4NZtObqRBTRnqcH0NOE6/8pMiGyJdpkMGlBfAOiW3WpiANeJ6', -- Admin@123
+    '$2a$12$2n5mD9TzMQdb27qZFoEWWORXzD7K1dGghfuPn9b7XcFo4zT2hEKT2', -- Admin@123
     'user123@example.com',
     'ADMIN',
     '1234567890',
@@ -14,7 +14,7 @@ INSERT INTO app_user (id, username, password, email, role, phone_number, balance
 VALUES (
     '22222222-2222-2222-2222-222222222222',
     'user456',
-    '$2a$12$YQmGyvk8mtXT2ETQkNy1rOJ17cAX/YAXYIxDJJjjnh4F1rsfuF6ma', -- User@456
+    '$2a$12$rfz9TxY38vLxYwCz2OG.2eP1e39vbJq58nmWrZ9xKQkM4UOTr1hNO', -- User@456
     'user456@example.com',
     'USER',
     '0987654321',
@@ -26,7 +26,7 @@ INSERT INTO app_user (id, username, password, email, role, phone_number, balance
 VALUES (
     '33333333-3333-3333-3333-333333333333',
     'employer1',
-    '$2a$12$pytkQHkLVZXbzHRu7ZVrgOt4xgk1wn83vcmG2rSu2rcNjTKV2xWx.', -- Employer@1
+    '$2a$12$ftMEsUo2FhnPY8USvZ0I/Oy8HfW5TZRKPbkU3zdxW8t0/nBfrtrc2', -- Employer@1
     'employer1@example.com',
     'EMPLOYER',
     '+380501234567',

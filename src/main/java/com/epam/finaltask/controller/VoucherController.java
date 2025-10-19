@@ -1,6 +1,7 @@
 package com.epam.finaltask.controller;
 
 import com.epam.finaltask.dto.VoucherDTO;
+import com.epam.finaltask.service.ReviewService;
 import com.epam.finaltask.service.VoucherService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
@@ -8,15 +9,27 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @Controller
 @RequestMapping("/dashboard")
 @Slf4j
 public class VoucherController {
 
     private final VoucherService voucherService;
+    private final ReviewService reviewService;
 
-    public VoucherController(VoucherService voucherService) {
+    public VoucherController(VoucherService voucherService, ReviewService reviewService) {
         this.voucherService = voucherService;
+        this.reviewService = reviewService;
+    }
+
+    @GetMapping("/{id}")
+    public String showVoucherDetails(@PathVariable UUID id, Model model) {
+        VoucherDTO voucher = voucherService.findById(id.toString());
+        model.addAttribute("voucher", voucher);
+        model.addAttribute("reviews", reviewService.getReviewsByVoucherId(id));
+        return "voucher-details";
     }
 
     @GetMapping
@@ -50,12 +63,7 @@ public class VoucherController {
                 : Sort.by(sortBy).descending();
 
         PageRequest pageRequest = PageRequest.of(page, size, sort);
-
         Page<VoucherDTO> voucherPage = voucherService.findFiltered(search, hot, tourType, hotelType, pageRequest);
-
-        if (voucherPage.isEmpty()) {
-            log.info("No vouchers found with given filters.");
-        }
 
         model.addAttribute("vouchers", voucherPage.getContent());
         model.addAttribute("currentPage", page);

@@ -43,6 +43,8 @@ public class PasswordController {
     // --- Forgot password ---
     @GetMapping("/forgot-password")
     public String showForgotPasswordForm(Model model) {
+        log.info("Displaying forgot password form");
+
         if (!model.containsAttribute("forgotPasswordRequest")) {
             model.addAttribute("forgotPasswordRequest", new ForgotPasswordRequestDto());
         }
@@ -56,6 +58,8 @@ public class PasswordController {
             RedirectAttributes redirectAttributes) {
 
         if (result.hasErrors()) {
+            log.warn("Validation errors in forgot password form for email: {}", request.getEmail());
+
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.forgotPasswordRequest", result);
             redirectAttributes.addFlashAttribute("forgotPasswordRequest", request);
             return "redirect:/auth/forgot-password";
@@ -64,6 +68,7 @@ public class PasswordController {
         Optional<User> userOpt = authService.findByEmail(request.getEmail());
         if (userOpt.isEmpty()) {
             log.warn("Password reset requested for non-existent email: {}", request.getEmail());
+
             redirectAttributes.addFlashAttribute("error", getMessage("reset.email.notfound"));
             redirectAttributes.addFlashAttribute("forgotPasswordRequest", request);
             return "redirect:/auth/forgot-password";
@@ -75,7 +80,8 @@ public class PasswordController {
         String resetLink = "https://localhost:8443/auth/reset-password?token=" + token;
         emailService.sendPasswordResetEmail(request.getEmail(), resetLink);
 
-        log.info("Password reset token generated and email sent to '{}'", request.getEmail());
+        log.info("Password reset token created and email sent to '{}'. Link: {}", request.getEmail(), resetLink);
+
         redirectAttributes.addFlashAttribute("message", getMessage("reset.link.sent"));
         return "redirect:/auth/forgot-password";
     }
@@ -90,6 +96,8 @@ public class PasswordController {
             model.addAttribute("error", getMessage("reset.password.invalid"));
             return "auth/reset-password";
         }
+
+        log.info("Displaying reset password form for valid token: {}", token);
 
         if (!model.containsAttribute("resetPassword")) {
             model.addAttribute("resetPassword", new ResetPasswordDto());
@@ -106,6 +114,7 @@ public class PasswordController {
 
         if (result.hasErrors()) {
             log.warn("Reset password validation failed for token '{}': {}", token, result.getAllErrors());
+
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.resetPassword", result);
             redirectAttributes.addFlashAttribute("resetPassword", resetPassword);
             redirectAttributes.addFlashAttribute("token", token);
@@ -114,6 +123,7 @@ public class PasswordController {
 
         if (!resetPassword.getPassword().equals(resetPassword.getConfirmPassword())) {
             log.warn("Password confirmation mismatch for token '{}'", token);
+
             redirectAttributes.addFlashAttribute("error", getMessage("reset.password.mismatch"));
             redirectAttributes.addFlashAttribute("resetPassword", resetPassword);
             redirectAttributes.addFlashAttribute("token", token);
@@ -123,6 +133,7 @@ public class PasswordController {
         Optional<User> userOpt = passwordResetService.validatePasswordResetToken(token);
         if (userOpt.isEmpty()) {
             log.warn("Invalid or expired password reset token used for reset: {}", token);
+
             redirectAttributes.addFlashAttribute("error", getMessage("reset.password.invalid"));
             return "redirect:/auth/reset-password?token=" + token;
         }
@@ -131,6 +142,7 @@ public class PasswordController {
         authService.updatePassword(user, resetPassword.getPassword());
 
         log.info("Password successfully reset for user '{}'", user.getUsername());
+
         redirectAttributes.addFlashAttribute("message", getMessage("reset.password.success"));
         return "redirect:/auth/sign-in";
     }

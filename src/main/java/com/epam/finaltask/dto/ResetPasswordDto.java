@@ -9,10 +9,10 @@ import lombok.Data;
 public class ResetPasswordDto {
 
     @NotBlank(message = "Password is required")
-    @Size(min = 7, max = 64, message = "Password must be at least 7 characters long")
+    @Size(min = 7, max = 64, message = "{validation.password.rules}")
     @Pattern(
-            regexp = "^(?=.*[0-9])(?=.*[A-Z])(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]).+$",
-            message = "Password must contain at least one uppercase letter, one digit, and one special character"
+            regexp = "^(?=.*[0-9])(?=.*[A-Z])(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]).+$"
+
     )
     private String password;
 

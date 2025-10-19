@@ -65,3 +65,14 @@ CREATE TABLE refresh_token (
     user_id UUID REFERENCES app_user(id)
 );
 
+CREATE TABLE review (
+    id UUID PRIMARY KEY,
+    voucher_id UUID NOT NULL,
+    user_id UUID NOT NULL,
+    user_name VARCHAR(255) NOT NULL,
+    user_email VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_review_voucher FOREIGN KEY (voucher_id) REFERENCES voucher(id) ON DELETE CASCADE,
+    CONSTRAINT fk_review_user FOREIGN KEY (user_id) REFERENCES app_user(id)
+);

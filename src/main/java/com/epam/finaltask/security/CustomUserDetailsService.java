@@ -35,7 +35,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         log.info("User found: {} ({})", appUser.getUsername(), appUser.getEmail());
 
         List<GrantedAuthority> authorities = List.of(
-                new SimpleGrantedAuthority("ROLE_" + appUser.getRole().name())
+                new SimpleGrantedAuthority("ROLE_" + appUser.getRole())
         );
 
         return new CustomUserDetails(

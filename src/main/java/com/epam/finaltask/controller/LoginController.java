@@ -32,6 +32,8 @@ public class LoginController {
 
     @GetMapping("/sign-in")
     public String showLoginForm(Model model) {
+        log.info("Displaying login form");
+
         if (!model.containsAttribute("loginRequest")) {
             model.addAttribute("loginRequest", new LoginRequestDto());
         }
@@ -45,6 +47,8 @@ public class LoginController {
                         HttpServletResponse response) {
 
         if (result.hasErrors()) {
+            log.warn("Login validation failed for user: {}", loginRequest.getUsername());
+
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.loginRequest", result);
             redirectAttributes.addFlashAttribute("loginRequest", loginRequest);
             return "redirect:/auth/sign-in";
@@ -52,10 +56,11 @@ public class LoginController {
 
         boolean success = authService.login(loginRequest);
         if (!success) {
+            log.warn("Login failed: invalid credentials for user: {}", loginRequest.getUsername());
+
             redirectAttributes.addFlashAttribute("loginError", getMessage("login.error"));
             return "redirect:/auth/sign-in";
         }
-
 
         Map<String, String> tokens = authService.generateTokens(loginRequest.getUsername());
 
@@ -73,6 +78,8 @@ public class LoginController {
 
         response.addCookie(accessCookie);
         response.addCookie(refreshCookie);
+
+        log.info("User {} logged in successfully", loginRequest.getUsername());
 
         redirectAttributes.addFlashAttribute("loginSuccess", getMessage("login.success"));
         return "redirect:/";
